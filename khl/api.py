@@ -1,8 +1,10 @@
+"""khl raw API and related helpers"""
 import functools
 import inspect
 import logging
 import re
-from typing import Dict, Callable, Tuple
+from collections import namedtuple
+from typing import Callable, Tuple
 
 import aiohttp
 
@@ -10,27 +12,23 @@ log = logging.getLogger(__name__)
 
 _RE_ROUTE = re.compile(r'(?<!^)(?=[A-Z])')
 
-
-class _Req:
-
-    def __init__(self, method: str, route: str, params: Dict):
-        self.method = method
-        self.route = route
-        self.params = params
+_Req = namedtuple('_Req', ['method', 'route', 'params'])
 
 
 def req(method: str, **http_fields):
+    """meta-decorator
+
+    :returns a decorator to fill func with boilerplate"""
 
     def _method(func: Callable):
-
         @functools.wraps(func)
         def req_maker(*args, **kwargs) -> _Req:
             route = _RE_ROUTE.sub('-', func.__qualname__).lower().replace('.', '/')
 
             # dump args into kwargs
             param_names = list(inspect.signature(func).parameters.keys())
-            for i in range(len(args)):
-                kwargs[param_names[i]] = args[i]
+            for i, arg in enumerate(args):
+                kwargs[param_names[i]] = arg
 
             params = _merge_params(method, http_fields, kwargs)
             return _Req(method, route, params)
@@ -49,7 +47,8 @@ def _merge_params(method: str, http_fields: dict, req_args: dict) -> dict:
         content_type = http_fields.get('headers', {}).get('Content-Type', None)
         if content_type == 'multipart/form-data':
             payload_key, payload = _build_form_payload(req_args)
-            http_fields = _remove_content_type(http_fields)  # headers of form-data req are delegated to aiohttp
+            # headers of form-data req are delegated to aiohttp
+            http_fields = _remove_content_type(http_fields)
         elif content_type is not None:
             raise ValueError(f'unrecognized Content-Type {content_type}')
 
@@ -78,6 +77,7 @@ def _build_form_payload(req_args: dict) -> Tuple[str, aiohttp.FormData]:
 
 
 class Guild:
+    """mapped to route: /guild/*"""
 
     @staticmethod
     @req('GET')
@@ -92,24 +92,24 @@ class Guild:
     @staticmethod
     @req('GET')
     def userList(
-        guild_id,
-        channel_id,
-        search,
-        role_id,
-        mobile_verified,
-        active_time,
-        joined_at,
-        page,
-        page_size,
+            guild_id,
+            channel_id,
+            search,
+            role_id,
+            mobile_verified,
+            active_time,
+            joined_at,
+            page,
+            page_size,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def nickname(
-        guild_id,
-        nickname,
-        user_id,
+            guild_id,
+            nickname,
+            user_id,
     ):
         ...
 
@@ -134,18 +134,18 @@ class GuildMute:
     @staticmethod
     @req('POST')
     def create(
-        guild_id,
-        user_id,
-        type,
+            guild_id,
+            user_id,
+            type,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def delete(
-        guild_id,
-        user_id,
-        type,
+            guild_id,
+            user_id,
+            type,
     ):
         ...
 
@@ -165,12 +165,12 @@ class Channel:
     @staticmethod
     @req('POST')
     def create(
-        guild_id,
-        parent_id,
-        name,
-        type,
-        limit_amount,
-        voice_quality,
+            guild_id,
+            parent_id,
+            name,
+            type,
+            limit_amount,
+            voice_quality,
     ):
         ...
 
@@ -195,29 +195,29 @@ class ChannelRole:
     @staticmethod
     @req('POST')
     def create(
-        channel_id,
-        type,
-        value,
+            channel_id,
+            type,
+            value,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def update(
-        channel_id,
-        type,
-        value,
-        allow,
-        deny,
+            channel_id,
+            type,
+            value,
+            allow,
+            deny,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def delete(
-        channel_id,
-        type,
-        value,
+            channel_id,
+            type,
+            value,
     ):
         ...
 
@@ -232,32 +232,32 @@ class Message:
     @staticmethod
     @req('GET')
     def list(
-        target_id,
-        msg_id,
-        pin,
-        flag,
+            target_id,
+            msg_id,
+            pin,
+            flag,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def create(
-        type,
-        target_id,
-        content,
-        quote,
-        nonce,
-        temp_target_id,
+            type,
+            target_id,
+            content,
+            quote,
+            nonce,
+            temp_target_id,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def update(
-        msg_id,
-        content,
-        quote,
-        temp_target_id,
+            msg_id,
+            content,
+            quote,
+            temp_target_id,
     ):
         ...
 
@@ -320,31 +320,31 @@ class DirectMessage:
     @staticmethod
     @req('GET')
     def list(
-        chat_code,
-        target_id,
-        msg_id,
-        flag,
+            chat_code,
+            target_id,
+            msg_id,
+            flag,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def create(
-        type,
-        target_id,
-        chat_code,
-        content,
-        quote,
-        nonce,
+            type,
+            target_id,
+            chat_code,
+            content,
+            quote,
+            nonce,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def update(
-        msg_id,
-        content,
-        quote,
+            msg_id,
+            content,
+            quote,
     ):
         ...
 
@@ -387,8 +387,8 @@ class User:
     @staticmethod
     @req('GET')
     def view(
-        user_id,
-        guild_id,
+            user_id,
+            guild_id,
     ):
         ...
 
@@ -411,47 +411,47 @@ class GuildRole:
     @staticmethod
     @req('POST')
     def create(
-        name,
-        guild_id,
+            name,
+            guild_id,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def update(
-        guild_id,
-        role_id,
-        hoist,
-        mentionable,
-        permissions,
-        color,
-        name,
+            guild_id,
+            role_id,
+            hoist,
+            mentionable,
+            permissions,
+            color,
+            name,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def delete(
-        guild_id,
-        role_id,
+            guild_id,
+            role_id,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def grant(
-        guild_id,
-        user_id,
-        role_id,
+            guild_id,
+            user_id,
+            role_id,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def revoke(
-        guild_id,
-        user_id,
-        role_id,
+            guild_id,
+            user_id,
+            role_id,
     ):
         ...
 
@@ -466,10 +466,10 @@ class Intimacy:
     @staticmethod
     @req('POST')
     def update(
-        user_id,
-        score,
-        social_info,
-        img_id,
+            user_id,
+            score,
+            social_info,
+            img_id,
     ):
         ...
 
@@ -484,17 +484,17 @@ class GuildEmoji:
     @staticmethod
     @req('POST', headers={'Content-Type': 'multipart/form-data'})
     def create(
-        name,
-        guild_id,
-        emoji,
+            name,
+            guild_id,
+            emoji,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def update(
-        name,
-        id,
+            name,
+            id,
     ):
         ...
 
@@ -509,25 +509,25 @@ class Invite:
     @staticmethod
     @req('GET')
     def list(
-        guild_id,
-        channel_id,
+            guild_id,
+            channel_id,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def create(
-        guild_id,
-        channel_id,
+            guild_id,
+            channel_id,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def delete(
-        guild_id,
-        channel_id,
-        url_code,
+            guild_id,
+            channel_id,
+            url_code,
     ):
         ...
 
@@ -542,18 +542,18 @@ class Game:
     @staticmethod
     @req('POST')
     def create(
-        name,
-        process_name,
-        icon,
+            name,
+            process_name,
+            icon,
     ):
         ...
 
     @staticmethod
     @req('POST')
     def update(
-        id,
-        name,
-        icon,
+            id,
+            name,
+            icon,
     ):
         ...
 
@@ -565,8 +565,8 @@ class Game:
     @staticmethod
     @req('POST')
     def activity(
-        id,
-        data_type,
+            id,
+            data_type,
     ):
         ...
 
