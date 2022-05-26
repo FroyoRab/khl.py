@@ -11,12 +11,6 @@ class CardMessage(list):
         super().__init__()
         self.extend(cards)
 
-    def append(self, card: Card):
-        super().append(card)
-
-    def pop(self, __index=...) -> Card:
-        return super().pop(__index)
-
     def __iter__(self):
         """hack for JSON serialization"""
         return iter([_get_repr(i) for i in self[:]])

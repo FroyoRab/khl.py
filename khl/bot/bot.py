@@ -1,3 +1,4 @@
+"""implementation of bot"""
 import asyncio
 import logging
 from typing import Dict, Callable, List, Optional, Union, Coroutine, IO
@@ -56,7 +57,7 @@ class Bot(AsyncRunnable):
         if not token and not cert:
             raise ValueError('require token or cert')
         self._init_client(cert or Cert(token=token), client, gate, out, compress, port, route)
-        msg_handler=self._make_msg_handler()
+        msg_handler = self._make_msg_handler()
         self.client.register(MessageTypes.TEXT, msg_handler)
         self.client.register(MessageTypes.KMD, msg_handler)
         self.client.register(MessageTypes.SYS, self._make_event_handler())
@@ -120,8 +121,8 @@ class Bot(AsyncRunnable):
                 return
             if not self._event_index[event.event_type]:
                 return
-            for h in self._event_index[event.event_type]:
-                await h(self, event)
+            for event_handler in self._event_index[event.event_type]:
+                await event_handler(self, event)
 
         return handler
 
@@ -260,28 +261,17 @@ class Bot(AsyncRunnable):
         return await self.client.list_game(begin_page=begin_page, end_page=end_page, page_size=page_size, sort=sort)
 
     async def create_game(self, name: str, process_name: str = None, icon: str = None) -> Game:
-        """
-        
-        Create a new game
-
-        """
+        """Create a new game"""
         return await self.client.create_game(name, process_name, icon)
 
     async def update_game(self, id: int, name: str = None, icon: str = None) -> Game:
-        """
-
-        Update game
-
-        """
+        """Update game"""
         return await self.client.update_game(id, name, icon)
 
     async def delete_game(self, game: Union[Game, int]):
-        """
-
-        Delete game
+        """Delete game
 
         :param game: accepts both Game object and bare id(int type)
-
         """
         await self.client.delete_game(game)
 
