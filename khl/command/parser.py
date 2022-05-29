@@ -31,12 +31,12 @@ class Parser:
         :raise: Parser.ArgListLenNotMatch
         """
         ret = []
-        for i in range(len(tokens)):
+        for i, v in enumerate(tokens):
             arg_type = params[min(i, len(params) - 1)].annotation
 
             # no type hint for t
             if arg_type == inspect.Parameter.empty:
-                ret.append(tokens[i])
+                ret.append(v)
                 continue
 
             if arg_type not in self._parse_funcs:

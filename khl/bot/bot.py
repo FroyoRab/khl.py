@@ -127,6 +127,7 @@ class Bot(AsyncRunnable):
         return handler
 
     def add_event_handler(self, type: EventTypes, handler: TypeEventHandler):
+        """add an event handler function for EventTypes `type`"""
         if type not in self._event_index:
             self._event_index[type] = []
         self._event_index[type].append(handler)
@@ -134,11 +135,7 @@ class Bot(AsyncRunnable):
         return handler
 
     def on_event(self, type: EventTypes):
-        """
-        decorator, register a function to handle events of the type
-
-        :param type: the type
-        """
+        """decorator, register a function to handle events of the type"""
 
         def dec(func: TypeEventHandler):
             self.add_event_handler(type, func)
@@ -146,7 +143,7 @@ class Bot(AsyncRunnable):
         return dec
 
     async def fetch_me(self, force_update: bool = False) -> User:
-        """fetch detail of the bot it self as a ``User``"""
+        """fetch detail of the bot itself as a ``User``"""
         return await self.client.fetch_me(force_update)
 
     @property
@@ -168,8 +165,9 @@ class Bot(AsyncRunnable):
         """fetch details of a public channel from khl"""
         return await self.client.fetch_public_channel(channel_id)
 
-    async def fetch_user(self, user_id: str) -> User:
-        return await self.client.fetch_user(user_id)
+    async def fetch_user(self, user: Union[User, str]) -> User:
+        """fetch detail of the specific user"""
+        return await self.client.fetch_user(user.id if isinstance(user, User) else user)
 
     async def delete_channel(self, channel: Union[Channel, str]):
         """delete a channel, permission required"""
@@ -258,6 +256,7 @@ class Bot(AsyncRunnable):
                         end_page: int = None,
                         page_size: int = 50,
                         sort: str = '') -> List[Game]:
+        """list the games already registered at khl server"""
         return await self.client.list_game(begin_page=begin_page, end_page=end_page, page_size=page_size, sort=sort)
 
     async def create_game(self, name: str, process_name: str = None, icon: str = None) -> Game:
@@ -301,6 +300,7 @@ class Bot(AsyncRunnable):
         await self.client.start()
 
     def run(self):
+        """run the bot in blocking mode"""
         if not self.loop:
             self.loop = asyncio.get_event_loop()
         try:

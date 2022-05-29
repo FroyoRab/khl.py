@@ -1,3 +1,4 @@
+"""card message: wrapper for easier card message sending"""
 from .card import Card
 from .interface import _get_repr
 
